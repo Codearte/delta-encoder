@@ -5,6 +5,8 @@ import org.junit.Test;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 
+import static eu.codearte.encoder.Utils.prices;
+
 /**
  * Created with IntelliJ IDEA.
  * User: qdlt
@@ -29,6 +31,32 @@ public class BinaryDeltaEncoderDecoderTest {
         System.out.println(Arrays.toString(results));
     }
 
+    @Test
+    public void compressionTest() {
+        final ByteBuffer buffer = ByteBuffer.allocateDirect(1024);
+        final double[] ask = prices(20, 1.1235813d, 10, 6);
+        final double[] bid = prices(20, 1.1235821d, 10, 6);
+        final int[] deltas = new int[20];
+
+        System.out.println("ASK: " + Arrays.toString(ask));
+        System.out.println("BID: " + Arrays.toString(bid));
+
+        encoder.encode(ask, deltas, 6, buffer);
+        encoder.encode(bid, deltas, 6, buffer);
+
+        System.out.println("40 doubles took: " + buffer.position());
+        System.out.println("Would normally take: " + 40 * Double.SIZE);
+
+        buffer.position(0);
+        final double[] decodedAsk = new double[20];
+        final double[] decodedBid = new double[20];
+
+        decoder.decode(buffer, decodedAsk);
+        decoder.decode(buffer, decodedBid);
+
+        System.out.println("Decoded ASK: " + Arrays.toString(decodedAsk));
+        System.out.println("Decoded BID: " + Arrays.toString(decodedBid));
+    }
 
 }
 

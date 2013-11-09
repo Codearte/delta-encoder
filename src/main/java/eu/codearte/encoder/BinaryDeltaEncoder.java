@@ -38,17 +38,17 @@ public class BinaryDeltaEncoder {
         if (idx >= doubles.length) return;
         final int remainingBits = (doubles.length - idx) * deltaSize;
 
-        if (remainingBits <= Byte.SIZE) buffer.put((byte) encodeBits(Byte.SIZE));
-        else if (remainingBits <= Short.SIZE) buffer.putShort((short) encodeBits(Short.SIZE));
-        else if (remainingBits <= Integer.SIZE) buffer.putInt((int) encodeBits(Integer.SIZE));
-        else buffer.putLong(encodeBits(Long.SIZE));
+        if (remainingBits >= Long.SIZE) buffer.putLong(encodeBits(Long.SIZE));
+        else if (remainingBits >= Integer.SIZE) buffer.putInt((int) encodeBits(Integer.SIZE));
+        else if (remainingBits >= Short.SIZE) buffer.putShort((short) encodeBits(Short.SIZE));
+        else buffer.put((byte) encodeBits(Byte.SIZE));
         encodeDeltas();
     }
 
     private long encodeBits(final int typeSize) {
         long bits = 0L;
         for (int pos = typeSize - deltaSize; pos >= 0 && idx < deltas.length; pos -= deltaSize)
-            bits |= deltas[idx++] << pos;
+            bits |= (long) deltas[idx++] << pos;
         return bits;
     }
 
