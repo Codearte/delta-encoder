@@ -15,11 +15,13 @@ public class BinaryDeltaEncoder {
         if (precision >= 1 << PRECISION_BITS) throw new IllegalArgumentException();
         if (values.length >= 1 << LENGTH_BITS) throw new IllegalArgumentException();
         doubles = values; deltas = temp; buffer = buf;
-        multiplier = (int) Math.pow(10, precision);
+        multiplier =  Utils.pow(10, precision);
+//        multiplier =  (int) Math.pow(10, precision);
 
         calculateDeltaVector();
         if (deltaSize >= 1 << DELTA_SIZE_BITS) throw new IllegalArgumentException();
         buf.putInt(precision << (LENGTH_BITS + DELTA_SIZE_BITS) | deltaSize << LENGTH_BITS | values.length);
+//        buf.putLong((long) (values[0]));
         buf.putLong(roundAndPromote(values[0]));
         idx = 1;
         encodeDeltas();
@@ -28,6 +30,7 @@ public class BinaryDeltaEncoder {
     private void calculateDeltaVector() {
         long maxDelta = 0, currentValue = roundAndPromote(doubles[0]);
         for (int i = 1; i < doubles.length; i++) {
+//            deltas[i] = (int) (-currentValue + (currentValue = (long) doubles[i] * multiplier));
             deltas[i] = (int) (-currentValue + (currentValue = roundAndPromote(doubles[i])));
             if (deltas[i] > maxDelta) maxDelta = deltas[i];
         }
@@ -53,6 +56,6 @@ public class BinaryDeltaEncoder {
     }
 
     private long roundAndPromote(final double value) {
-        return (long) StrictMath.floor(value * multiplier + .5d);
+        return (long) (value * multiplier + .5d);
     }
 }

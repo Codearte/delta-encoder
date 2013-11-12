@@ -14,7 +14,7 @@ public class BinaryDeltaDecoder {
     public void decode(final ByteBuffer buf, final double[] doubles) {
         buffer = buf; this.doubles = doubles;
         final int bits = buffer.getInt();
-        divisor = (int) Math.pow(10, bits >>> (LENGTH_BITS + DELTA_SIZE_BITS));
+        divisor = Utils.pow(10, bits >>> (LENGTH_BITS + DELTA_SIZE_BITS));
         deltaSize = (bits >>> LENGTH_BITS) & 0x1F;
         length = bits & 0x7FFFFF;
         doubles[0] = decimal(current = buffer.getLong());

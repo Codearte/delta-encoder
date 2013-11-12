@@ -19,7 +19,17 @@ public class Utils {
         final double divisor = Math.pow(10, precision);
         result[0] = basePrice;
         for (int i = 1; i < length; i++)
-            result[i] = result[i-1] + (double) RANDOM.nextInt(maxDifferenceInPips) / divisor;
+            result[i] = result[i - 1] + (double) RANDOM.nextInt(maxDifferenceInPips) / divisor;
+        return result;
+    }
+
+    public static int pow(int base, int exp) {
+        int result = 1;
+        while (exp > 0) {
+            if ((exp & 1) != 0) result *= base;
+            exp >>= 1;
+            base *= base;
+        }
         return result;
     }
 }
