@@ -27,7 +27,7 @@ public class DeltaDoubleArrayEncoder implements DoubleArrayEncoder {
     @Override
     public int encode(double[] values) {
         encoder.encode(values, temp, precision, buffer);
-        return buffer.position();
+        return encoder.buffer.position();
     }
 
     @Override
@@ -38,7 +38,8 @@ public class DeltaDoubleArrayEncoder implements DoubleArrayEncoder {
 
     @Override
     public void reset() {
-        buffer.position(0);
+        encoder.buffer.position(0);
+        decoder.buffer.position(0);
     }
 
 }

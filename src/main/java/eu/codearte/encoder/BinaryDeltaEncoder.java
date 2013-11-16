@@ -6,7 +6,7 @@ import static eu.codearte.encoder.Constants.*;
 
 public class BinaryDeltaEncoder {
 
-    public ByteBuffer buffer;
+    public final UnsafeBuffer buffer = new UnsafeBuffer();
     public double[] doubles;
     public int[] deltas;
     public int deltaSize, multiplier, idx;
@@ -14,15 +14,13 @@ public class BinaryDeltaEncoder {
     public void encode(final double[] values, final int[] temp, final int precision, final ByteBuffer buf) {
         if (precision >= 1 << PRECISION_BITS) throw new IllegalArgumentException();
         if (values.length >= 1 << LENGTH_BITS) throw new IllegalArgumentException();
-        doubles = values; deltas = temp; buffer = buf;
+        doubles = values; deltas = temp; buffer.setBuffer(buf);
         multiplier =  Utils.pow(10, precision);
-//        multiplier =  (int) Math.pow(10, precision);
 
         calculateDeltaVector();
         if (deltaSize >= 1 << DELTA_SIZE_BITS) throw new IllegalArgumentException();
-        buf.putInt(precision << (LENGTH_BITS + DELTA_SIZE_BITS) | deltaSize << LENGTH_BITS | values.length);
-//        buf.putLong((long) (values[0]));
-        buf.putLong(roundAndPromote(values[0]));
+        buffer.putInt(precision << (LENGTH_BITS + DELTA_SIZE_BITS) | deltaSize << LENGTH_BITS | values.length);
+        buffer.putLong(roundAndPromote(values[0]));
         idx = 1;
         encodeDeltas();
     }
@@ -30,7 +28,6 @@ public class BinaryDeltaEncoder {
     private void calculateDeltaVector() {
         long maxDelta = 0, currentValue = roundAndPromote(doubles[0]);
         for (int i = 1; i < doubles.length; i++) {
-//            deltas[i] = (int) (-currentValue + (currentValue = (long) doubles[i] * multiplier));
             deltas[i] = (int) (-currentValue + (currentValue = roundAndPromote(doubles[i])));
             if (deltas[i] > maxDelta) maxDelta = deltas[i];
         }

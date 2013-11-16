@@ -31,22 +31,44 @@ public class UnsafeBuffer {
     void setBuffer(final ByteBuffer buffer) {
         if (!buffer.isDirect()) throw new IllegalArgumentException();
         address = ((DirectBuffer) buffer).address();
+        position = buffer.position();
+    }
+
+    private long addr(final int offset) {
+        final long pos = address + position;
+        position += offset;
+        return pos;
+    }
+
+    public long getLong() {
+        return _unsafe.getLong(addr(8));
+    }
+
+    public int getInt() {
+        return _unsafe.getInt(addr(4));
+    }
+
+    public short getShort() {
+        return _unsafe.getShort(addr(2));
+    }
+
+    public byte get() {
+        return _unsafe.getByte(address + (position++));
     }
 
     public void putLong(final long val) {
-        _unsafe.putLong(address + (position += Long.SIZE), val);
+        _unsafe.putLong(addr(8), val);
     }
 
     public void putInt(final int val) {
-        _unsafe.putInt(address + (position += Integer.SIZE), val);
+        _unsafe.putInt(addr(4), val);
     }
 
     public void putShort(final short val) {
-        _unsafe.putInt(address + (position += Short.SIZE), val);
+        _unsafe.putInt(addr(2), val);
     }
-
     public void put(final byte val) {
-        _unsafe.putInt(address + (position += Byte.SIZE), val);
+        _unsafe.putInt(address + (position++), val);
     }
 
     public int position() {
