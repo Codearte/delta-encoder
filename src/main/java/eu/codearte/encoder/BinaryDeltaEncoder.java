@@ -6,20 +6,29 @@ import static eu.codearte.encoder.Constants.*;
 
 public class BinaryDeltaEncoder {
 
-    public final UnsafeBuffer buffer = new UnsafeBuffer();
+    public ByteBuffer buffer;
     public double[] doubles;
     public int[] deltas;
     public int deltaSize, multiplier, idx;
 
-    public void encode(final double[] values, final int[] temp, final int precision, final ByteBuffer buf) {
+    public BinaryDeltaEncoder(final int precision, final int maxLength) {
+        validateLength(maxLength);
         if (precision >= 1 << PRECISION_BITS) throw new IllegalArgumentException();
-        if (values.length >= 1 << LENGTH_BITS) throw new IllegalArgumentException();
-        doubles = values; deltas = temp; buffer.setBuffer(buf);
+
+    }
+
+    private void validateLength(int maxLength) {
+        if (maxLength > (1 << (LENGTH_BITS - 1) & 0x7FFFFFFF)) throw new IllegalArgumentException();
+    }
+
+    public void encode(final double[] values, final int[] temp, final int precision, final ByteBuffer buf) {
+        validateLength(values.length);
+        doubles = values; deltas = temp; buffer = buf;
         multiplier =  Utils.pow(10, precision);
 
         calculateDeltaVector();
-        if (deltaSize >= 1 << DELTA_SIZE_BITS) throw new IllegalArgumentException();
-        buffer.putInt(precision << (LENGTH_BITS + DELTA_SIZE_BITS) | deltaSize << LENGTH_BITS | values.length);
+        if (deltaSize > DELTA_SIZE_BITS) throw new IllegalArgumentException();
+        buffer.putLong((long) precision << (LENGTH_BITS + DELTA_SIZE_BITS) | (long) deltaSize << LENGTH_BITS | values.length);
         buffer.putLong(roundAndPromote(values[0]));
         idx = 1;
         encodeDeltas();
@@ -38,9 +47,9 @@ public class BinaryDeltaEncoder {
         if (idx >= doubles.length) return;
         final int remainingBits = (doubles.length - idx) * deltaSize;
 
-        if (remainingBits >= Long.SIZE) buffer.putLong(encodeBits(Long.SIZE));
-        else if (remainingBits >= Integer.SIZE) buffer.putInt((int) encodeBits(Integer.SIZE));
-        else if (remainingBits >= Short.SIZE) buffer.putShort((short) encodeBits(Short.SIZE));
+        if (remainingBits >= Long.SIZE || deltaSize > Integer.SIZE) buffer.putLong(encodeBits(Long.SIZE));
+        else if (remainingBits >= Integer.SIZE || deltaSize > Short.SIZE) buffer.putInt((int) encodeBits(Integer.SIZE));
+        else if (remainingBits >= Short.SIZE || deltaSize > Byte.SIZE) buffer.putShort((short) encodeBits(Short.SIZE));
         else buffer.put((byte) encodeBits(Byte.SIZE));
         encodeDeltas();
     }

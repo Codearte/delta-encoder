@@ -23,8 +23,8 @@ public class DeltaEncodingPerformanceTest {
 
     @Test
     public void testSize() throws IOException {
-        final double[] ask = prices(20, 1.1235813d, 10, 6);
-        final double[] bid = prices(20, 1.1235821d, 10, 6);
+        final double[] ask = prices(20, 1.1235813d, true, 10, 6);
+        final double[] bid = prices(20, 1.1235821d, true, 10, 6);
         System.out.println("Size in bytes:");
 
         final ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -38,7 +38,7 @@ public class DeltaEncodingPerformanceTest {
         final ByteBuffer byteBuffer = ByteBuffer.allocateDirect(1024);
         System.out.println("Bytebuffer: " + serialiseWithByteBuffer(ask, bid, byteBuffer));
 
-        final ByteBuffer deltaBuffer = ByteBuffer.allocate(1024);
+        final ByteBuffer deltaBuffer = ByteBuffer.allocateDirect(1024);
         final BinaryDeltaEncoder encoder = new BinaryDeltaEncoder();
         final int[] temp = new int[ask.length];
         System.out.println("Delta: " + serialiseWithDelta(ask, bid, deltaBuffer, encoder, temp));
@@ -46,28 +46,24 @@ public class DeltaEncodingPerformanceTest {
 
     private int serialiseWithJava(double[] ask, double[] bid, ByteArrayOutputStream baos, ObjectOutputStream out) throws IOException {
         out.writeObject(ask);
-        out.writeObject(bid);
         return baos.size();
     }
 
     private int serialiseWithKryo(double[] ask, double[] bid, Kryo kryo, Output output) {
         kryo.writeObject(output, ask);
-        kryo.writeObject(output, bid);
         return output.position();
     }
 
     private int serialiseWithByteBuffer(double[] ask, double[] bid, ByteBuffer buf) {
         for (int i = 0; i < 20; i++) {
             buf.putDouble(ask[i]);
-            buf.putDouble(bid[i]);
         }
         return buf.position();
     }
 
     private int serialiseWithDelta(double[] ask, double[] bid, ByteBuffer buffer, BinaryDeltaEncoder encoder, int[] temp) {
         encoder.encode(ask, temp, 6, buffer);
-        encoder.encode(bid, temp, 6, buffer);
-        return buffer.position();
+        return encoder.buffer.position();
     }
 
 }

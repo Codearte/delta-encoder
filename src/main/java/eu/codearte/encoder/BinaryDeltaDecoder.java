@@ -2,22 +2,24 @@ package eu.codearte.encoder;
 
 import java.nio.ByteBuffer;
 
-import static eu.codearte.encoder.Constants.*;
+import static eu.codearte.encoder.Constants.DELTA_SIZE_BITS;
+import static eu.codearte.encoder.Constants.LENGTH_BITS;
 
 public class BinaryDeltaDecoder {
 
-    public final UnsafeBuffer buffer = new UnsafeBuffer();
+    private ByteBuffer buffer;
     private double[] doubles;
     private long current;
-    private int divisor, deltaSize, length, mask;
+    private int multiplier, deltaSize, length, mask;
 
-    public void decode(final ByteBuffer buf, final double[] doubles) {
-        buffer.setBuffer(buf); this.doubles = doubles;
-        final int bits = buffer.getInt();
-        divisor = Utils.pow(10, bits >>> (LENGTH_BITS + DELTA_SIZE_BITS));
-        deltaSize = (bits >>> LENGTH_BITS) & 0x1F;
-        length = bits & 0x7FFFFF;
-        doubles[0] = decimal(current = buffer.getLong());
+    public void decode(final ByteBuffer buffer, final double[] doubles) {
+        this.buffer = buffer; this.doubles = doubles;
+        final long bits = this.buffer.getLong();
+        // division by reciprocal approximation
+        multiplier = Utils.pow(10, -(bits >>> (LENGTH_BITS + DELTA_SIZE_BITS))); // ~20ns
+        deltaSize = (int) (bits >>> LENGTH_BITS) & 0x3FFFFFF;
+        length = (int) (bits & 0xFFFFFFFF);
+        doubles[0] = decimal(current = this.buffer.getLong());
         mask = (1 << deltaSize) - 1;
         decodeDeltas(1);
     }
@@ -32,12 +34,6 @@ public class BinaryDeltaDecoder {
         else decodeBits(idx, buffer.get(), Byte.SIZE);
     }
 
-    private void decodeBitsLong(int idx, final long bits, final int typeSize) {
-        for (int offset = typeSize - deltaSize; offset >= 0 && idx < length; offset -= deltaSize)
-            doubles[idx++] = decimal(current += ((bits >>> offset) & mask));
-        decodeDeltas(idx);
-    }
-
     private void decodeBits(int idx, final long bits, final int typeSize) {
         for (int offset = typeSize - deltaSize; offset >= 0 && idx < length; offset -= deltaSize)
             doubles[idx++] = decimal(current += ((bits >>> offset) & mask));
@@ -45,7 +41,11 @@ public class BinaryDeltaDecoder {
     }
 
     private double decimal(final long value) {
-        return (double) value / divisor;
+        return multiplier * value;
+    }
+
+    public static void main(String[] args) {
+        System.out.println();
     }
 
 }

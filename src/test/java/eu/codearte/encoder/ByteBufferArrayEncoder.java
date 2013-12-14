@@ -11,7 +11,7 @@ import java.nio.ByteBuffer;
  */
 public class ByteBufferArrayEncoder implements DoubleArrayEncoder {
 
-    private final ByteBuffer buffer = ByteBuffer.allocate(1024);
+    private final ByteBuffer buffer = ByteBuffer.allocate(10 * 1024);
     private final double[] temp;
 
     public ByteBufferArrayEncoder(final int size) {
@@ -36,5 +36,6 @@ public class ByteBufferArrayEncoder implements DoubleArrayEncoder {
     public void reset() {
         buffer.position(0);
     }
+
 
 }

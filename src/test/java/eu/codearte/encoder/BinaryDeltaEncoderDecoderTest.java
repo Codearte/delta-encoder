@@ -34,8 +34,8 @@ public class BinaryDeltaEncoderDecoderTest {
     @Test
     public void compressionTest() {
         final ByteBuffer buffer = ByteBuffer.allocateDirect(1024);
-        final double[] ask = prices(20, 1.1235813d, 10, 6);
-        final double[] bid = prices(20, 1.1235821d, 10, 6);
+        final double[] ask = prices(20, 1.1235813d, true, 10, 6);
+        final double[] bid = prices(20, 1.1235821d, true, 10, 6);
         final int[] deltas = new int[20];
 
         System.out.println("ASK: " + Arrays.toString(ask));

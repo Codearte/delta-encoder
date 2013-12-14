@@ -39,7 +39,7 @@ public class DeltaDoubleArrayEncoder implements DoubleArrayEncoder {
     @Override
     public void reset() {
         encoder.buffer.position(0);
-        decoder.buffer.position(0);
+//        decoder.buffer.position(0);
     }
 
 }

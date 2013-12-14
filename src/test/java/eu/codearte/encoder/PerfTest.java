@@ -11,19 +11,19 @@ import static eu.codearte.encoder.Utils.prices;
  */
 public class PerfTest {
 
-    private static final int ITERATIONS = 5;
-    private static final int WARMUP = 1;
-//    private static final int ITERATIONS = 5_000_000;
-//    private static final int WARMUP = 1_000_000;
+//    private static final int ITERATIONS = 5;
+//    private static final int WARMUP = 1;
+    private static final int ITERATIONS = 1_000_000;
+    private static final int WARMUP = 100_000;
 
-    private static final double[] doubles = prices(20, 1.1235813d, 10, 6);
+    private static final double[] doubles = prices(10, 1.1235813d, true, 10, 6);
     public static double[] result;
 
     public static void main(String[] args) {
-        testEncoder(new JavaArrayEncoder());
+//        testEncoder(new JavaArrayEncoder());
+        testEncoder(new DeltaDoubleArrayEncoder(200, 6));
+        testEncoder(new ByteBufferArrayEncoder(200));
         testEncoder(new KryoArrayEncoder());
-        testEncoder(new ByteBufferArrayEncoder(20));
-        testEncoder(new DeltaDoubleArrayEncoder(20, 6));
     }
 
     private static void testEncoder(DoubleArrayEncoder encoder) {
@@ -35,8 +35,8 @@ public class PerfTest {
     }
 
     private static void printResults(DoubleArrayEncoder encoder, long[] longs) {
-        System.out.println("Encode (ns): " + longs[0] / ITERATIONS);
-        System.out.println("Decode (ns): " + longs[1] / ITERATIONS);
+        System.out.print("Encode (ns): " + longs[0] / ITERATIONS);
+        System.out.println("\t\tDecode (ns): " + longs[1] / ITERATIONS);
     }
 
     private static long[] runTests(DoubleArrayEncoder encoder, int iterations) {
@@ -50,6 +50,7 @@ public class PerfTest {
         times[0] = System.nanoTime() - start;
 
         encoder.encode(doubles);
+        encoder.reset();
 
         start = System.nanoTime();
         for (int i = 0; i < iterations; i++) {

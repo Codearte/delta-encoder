@@ -18,10 +18,10 @@ import static com.esotericsoftware.kryo.Kryo.NULL;
 public class KryoArrayEncoder implements DoubleArrayEncoder {
 
     private final Kryo kryo = new Kryo();
-    private final ByteBuffer buffer = ByteBuffer.allocateDirect(1024);
+    private final ByteBuffer buffer = ByteBuffer.allocateDirect(10*1024);
     private final ByteBufferOutput output = new ByteBufferOutput();
     private final ByteBufferInput input = new ByteBufferInput();
-    private final double[] cached = new double[20];
+    private final double[] cached = new double[200];
 
     {
         output.setBuffer(buffer, buffer.capacity());
