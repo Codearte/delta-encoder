@@ -5,17 +5,17 @@ import org.junit.Test;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 
-import static eu.codearte.encoder.Utils.prices;
+import static eu.codearte.encoder.Utils.doubles;
 
 /**
  * Created with IntelliJ IDEA.
- * User: qdlt
+ * User: Wojciech Kudla
  * Date: 06/11/13
  * Time: 21:40
- * To change this template use File | Settings | File Templates.
  */
 public class BinaryDeltaEncoderDecoderTest {
 
+    private static final int LENGTH = 20;
     private final BinaryDeltaEncoder encoder = new BinaryDeltaEncoder();
     private final BinaryDeltaDecoder decoder = new BinaryDeltaDecoder();
 
@@ -34,28 +34,20 @@ public class BinaryDeltaEncoderDecoderTest {
     @Test
     public void compressionTest() {
         final ByteBuffer buffer = ByteBuffer.allocateDirect(1024);
-        final double[] ask = prices(20, 1.1235813d, true, 10, 6);
-        final double[] bid = prices(20, 1.1235821d, true, 10, 6);
-        final int[] deltas = new int[20];
+        final double[] doubles = doubles(LENGTH, 1.1235813d, true, LENGTH, 6);
+        final int[] deltas = new int[LENGTH];
 
-        System.out.println("ASK: " + Arrays.toString(ask));
-        System.out.println("BID: " + Arrays.toString(bid));
+        System.out.println("Array: " + Arrays.toString(doubles));
+        encoder.encode(doubles, deltas, 6, buffer);
 
-        encoder.encode(ask, deltas, 6, buffer);
-        encoder.encode(bid, deltas, 6, buffer);
-
-        System.out.println("40 doubles took: " + buffer.position());
-        System.out.println("Would normally take: " + 40 * Double.SIZE);
+        System.out.println(LENGTH + " doubles took: " + buffer.position());
+        System.out.println("Would normally take: " + LENGTH * Double.SIZE);
 
         buffer.position(0);
-        final double[] decodedAsk = new double[20];
-        final double[] decodedBid = new double[20];
+        final double[] decodedArray = new double[20];
 
-        decoder.decode(buffer, decodedAsk);
-        decoder.decode(buffer, decodedBid);
-
-        System.out.println("Decoded ASK: " + Arrays.toString(decodedAsk));
-        System.out.println("Decoded BID: " + Arrays.toString(decodedBid));
+        decoder.decode(buffer, decodedArray);
+        System.out.println("Decoded array: " + Arrays.toString(decodedArray));
     }
 
 }

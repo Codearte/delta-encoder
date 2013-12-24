@@ -18,25 +18,15 @@ import static com.esotericsoftware.kryo.Kryo.NULL;
 public class KryoArrayEncoder implements DoubleArrayEncoder {
 
     private final Kryo kryo = new Kryo();
-    private final ByteBuffer buffer = ByteBuffer.allocateDirect(10*1024);
+    private final ByteBuffer buffer = ByteBuffer.allocateDirect(4096);
     private final ByteBufferOutput output = new ByteBufferOutput();
     private final ByteBufferInput input = new ByteBufferInput();
-    private final double[] cached = new double[200];
 
-    {
+
+    public KryoArrayEncoder(final int length) {
         output.setBuffer(buffer, buffer.capacity());
         input.setBuffer(buffer, 0, buffer.capacity());
-        kryo.register(double[].class, new DefaultArraySerializers.DoubleArraySerializer() {
-            @Override
-            public double[] read(Kryo kryo, Input input, Class<double[]> type) {
-                int length = input.readVarInt(true);
-                if (length == NULL) return null;
-                for (int i = 0; i < cached.length; i++) {
-                    cached[i] = input.readDouble();
-                }
-                return cached;
-            }
-        });
+        kryo.register(double[].class, new CachedArraySerializer(length));
     }
 
     @Override
@@ -59,4 +49,21 @@ public class KryoArrayEncoder implements DoubleArrayEncoder {
         buffer.position(0);
     }
 
+    private static class CachedArraySerializer extends DefaultArraySerializers.DoubleArraySerializer {
+        private final double[] cached;
+
+        private CachedArraySerializer(final int length) {
+            this.cached = new double[length];
+        }
+
+        @Override
+        public double[] read(Kryo kryo, Input input, Class<double[]> type) {
+            int length = input.readVarInt(true);
+            if (length == NULL) return null;
+            for (int i = 0; i < cached.length; i++) {
+                cached[i] = input.readDouble();
+            }
+            return cached;
+        }
+    }
 }

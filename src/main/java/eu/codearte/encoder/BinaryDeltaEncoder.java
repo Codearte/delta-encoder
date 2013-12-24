@@ -6,23 +6,16 @@ import static eu.codearte.encoder.Constants.*;
 
 public class BinaryDeltaEncoder {
 
+    public static final int MAX_LENGTH_MASK = ~(1 << (LENGTH_BITS - 1));
+
     public ByteBuffer buffer;
     public double[] doubles;
     public int[] deltas;
     public int deltaSize, multiplier, idx;
 
-    public BinaryDeltaEncoder(final int precision, final int maxLength) {
-        validateLength(maxLength);
-        if (precision >= 1 << PRECISION_BITS) throw new IllegalArgumentException();
-
-    }
-
-    private void validateLength(int maxLength) {
-        if (maxLength > (1 << (LENGTH_BITS - 1) & 0x7FFFFFFF)) throw new IllegalArgumentException();
-    }
-
     public void encode(final double[] values, final int[] temp, final int precision, final ByteBuffer buf) {
-        validateLength(values.length);
+        if (precision >= 1 << PRECISION_BITS) throw new IllegalArgumentException();
+        if ((values.length & MAX_LENGTH_MASK) != values.length) throw new IllegalArgumentException();
         doubles = values; deltas = temp; buffer = buf;
         multiplier =  Utils.pow(10, precision);
 

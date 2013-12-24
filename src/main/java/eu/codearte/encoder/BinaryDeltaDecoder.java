@@ -10,16 +10,16 @@ public class BinaryDeltaDecoder {
     private ByteBuffer buffer;
     private double[] doubles;
     private long current;
-    private int multiplier, deltaSize, length, mask;
+    private double divisor;
+    private int deltaSize, length, mask;
 
     public void decode(final ByteBuffer buffer, final double[] doubles) {
         this.buffer = buffer; this.doubles = doubles;
         final long bits = this.buffer.getLong();
-        // division by reciprocal approximation
-        multiplier = Utils.pow(10, -(bits >>> (LENGTH_BITS + DELTA_SIZE_BITS))); // ~20ns
+        divisor = Math.pow(10, bits >>> (LENGTH_BITS + DELTA_SIZE_BITS));
         deltaSize = (int) (bits >>> LENGTH_BITS) & 0x3FFFFFF;
-        length = (int) (bits & 0xFFFFFFFF);
-        doubles[0] = decimal(current = this.buffer.getLong());
+        length = (int) (bits);
+        doubles[0] = (current = this.buffer.getLong()) / divisor;
         mask = (1 << deltaSize) - 1;
         decodeDeltas(1);
     }
@@ -36,16 +36,8 @@ public class BinaryDeltaDecoder {
 
     private void decodeBits(int idx, final long bits, final int typeSize) {
         for (int offset = typeSize - deltaSize; offset >= 0 && idx < length; offset -= deltaSize)
-            doubles[idx++] = decimal(current += ((bits >>> offset) & mask));
+            doubles[idx++] = (current += ((bits >>> offset) & mask)) / divisor;
         decodeDeltas(idx);
-    }
-
-    private double decimal(final long value) {
-        return multiplier * value;
-    }
-
-    public static void main(String[] args) {
-        System.out.println();
     }
 
 }

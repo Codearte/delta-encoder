@@ -1,6 +1,8 @@
 package eu.codearte.encoder;
 
-import static eu.codearte.encoder.Utils.prices;
+import java.util.concurrent.locks.LockSupport;
+
+import static eu.codearte.encoder.Utils.doubles;
 
 /**
  * Created with IntelliJ IDEA.
@@ -11,26 +13,26 @@ import static eu.codearte.encoder.Utils.prices;
  */
 public class PerfTest {
 
-//    private static final int ITERATIONS = 5;
-//    private static final int WARMUP = 1;
+    public static final int ARRAY_LENGTH = 20;
     private static final int ITERATIONS = 1_000_000;
-    private static final int WARMUP = 100_000;
 
-    private static final double[] doubles = prices(10, 1.1235813d, true, 10, 6);
+    private static final int WARMUP = 100_000;
+    private static final double[] doubles = doubles(ARRAY_LENGTH, 1.1235813d, true, 10, 6);
     public static double[] result;
 
     public static void main(String[] args) {
-//        testEncoder(new JavaArrayEncoder());
-        testEncoder(new DeltaDoubleArrayEncoder(200, 6));
-        testEncoder(new ByteBufferArrayEncoder(200));
-        testEncoder(new KryoArrayEncoder());
+//        testEncoder(new KryoArrayEncoder(ARRAY_LENGTH));
+        testEncoder(new DeltaDoubleArrayEncoder(ARRAY_LENGTH, 6));
+//        testEncoder(new ByteBufferArrayEncoder(ARRAY_LENGTH));
     }
 
     private static void testEncoder(DoubleArrayEncoder encoder) {
+        System.out.println("Array lenght: " + ARRAY_LENGTH);
         System.out.println(encoder.getClass().getSimpleName());
         runTests(encoder, WARMUP);
+        LockSupport.parkNanos(1_000_000_000L);
         System.out.println("------ WARMED UP ------");
-        for (int i = 0; i < 5; i++) printResults(encoder, runTests(encoder, ITERATIONS));
+        for (int i = 0; i < 7; i++) printResults(encoder, runTests(encoder, ITERATIONS));
         System.out.println("-----------------------");
     }
 

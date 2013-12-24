@@ -3,7 +3,7 @@ package eu.codearte.encoder;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 
-import static eu.codearte.encoder.Utils.prices;
+import static eu.codearte.encoder.Utils.doubles;
 
 /**
  * Created with IntelliJ IDEA.
@@ -22,7 +22,7 @@ public class MessageSizeTest {
         final ByteBuffer buf = ByteBuffer.allocateDirect(1024 * 1024);
         for (int i = 15; i < 16; i++) {
             buf.clear();
-            double[] prices = prices(100, 10.0d, true, 1 << i, 6);
+            double[] prices = doubles(100, 10.0d, true, 1 << i, 6);
             encoder.encode(prices, temp, 6, buf);
             buf.position(0);
             decoder.decode(buf, decoded);

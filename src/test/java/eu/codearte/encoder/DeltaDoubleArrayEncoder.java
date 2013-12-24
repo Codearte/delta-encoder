@@ -11,7 +11,7 @@ import java.nio.ByteBuffer;
  */
 public class DeltaDoubleArrayEncoder implements DoubleArrayEncoder {
 
-    private final ByteBuffer buffer = ByteBuffer.allocateDirect(1024);
+    private final ByteBuffer buffer = ByteBuffer.allocateDirect(4096);
     private final int[] temp;
     private final double[] doubles;
     private final BinaryDeltaEncoder encoder = new BinaryDeltaEncoder();

@@ -2,7 +2,6 @@ package eu.codearte.encoder;
 
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.io.Output;
-import com.esotericsoftware.kryo.io.UnsafeMemoryOutput;
 import org.junit.Test;
 
 import java.io.ByteArrayOutputStream;
@@ -10,7 +9,7 @@ import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.nio.ByteBuffer;
 
-import static eu.codearte.encoder.Utils.prices;
+import static eu.codearte.encoder.Utils.doubles;
 
 /**
  * Created with IntelliJ IDEA.
@@ -23,25 +22,16 @@ public class DeltaEncodingPerformanceTest {
 
     @Test
     public void testSize() throws IOException {
-        final double[] ask = prices(20, 1.1235813d, true, 10, 6);
-        final double[] bid = prices(20, 1.1235821d, true, 10, 6);
-        System.out.println("Size in bytes:");
-
-        final ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        final ObjectOutputStream objectOutputStream = new ObjectOutputStream(baos);
-        System.out.println("Java: " + serialiseWithJava(ask, bid, baos, objectOutputStream));
-
-        final Kryo kryo = new Kryo();
-        final UnsafeMemoryOutput output = new UnsafeMemoryOutput(1024);
-        System.out.println("Kryo: " + serialiseWithKryo(ask, bid, kryo, output));
-
-        final ByteBuffer byteBuffer = ByteBuffer.allocateDirect(1024);
-        System.out.println("Bytebuffer: " + serialiseWithByteBuffer(ask, bid, byteBuffer));
-
-        final ByteBuffer deltaBuffer = ByteBuffer.allocateDirect(1024);
+        final ByteBuffer buf = ByteBuffer.allocate(100000);
         final BinaryDeltaEncoder encoder = new BinaryDeltaEncoder();
-        final int[] temp = new int[ask.length];
-        System.out.println("Delta: " + serialiseWithDelta(ask, bid, deltaBuffer, encoder, temp));
+        for (int i = 10; i <= 320; i *= 2) {
+            final double[] doubles = doubles(i, 1.1235813d, true, 10, 6);
+            buf.clear();
+            final int byteBufSize = serialiseWithByteBuffer(doubles, null, buf);
+            buf.clear();
+            final int deltaSize = serialiseWithDelta(doubles, null, buf, encoder, new int[i]);
+            System.out.println("Array size: " + i + "\t\tbuffer: " + byteBufSize + "\t\tdelta: " + deltaSize);
+        }
     }
 
     private int serialiseWithJava(double[] ask, double[] bid, ByteArrayOutputStream baos, ObjectOutputStream out) throws IOException {
@@ -55,7 +45,7 @@ public class DeltaEncodingPerformanceTest {
     }
 
     private int serialiseWithByteBuffer(double[] ask, double[] bid, ByteBuffer buf) {
-        for (int i = 0; i < 20; i++) {
+        for (int i = 0; i < ask.length; i++) {
             buf.putDouble(ask[i]);
         }
         return buf.position();
